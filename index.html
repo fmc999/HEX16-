@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEX16 Comparison Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(100, 100, 255, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(255, 100, 100, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 80%, rgba(100, 255, 100, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #00d4ff, #7b42f6, #ff0080);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .language-switch {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e0e0e0;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .language-switch:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .tool-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '▶';
+            color: #7b42f6;
+        }
+
+        .hex-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        label {
+            font-weight: 600;
+            color: #b0b0b0;
+            font-size: 1rem;
+        }
+
+        textarea {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            color: #e0e0e0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 200px;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(45deg, #00d4ff, #7b42f6);
+            border: none;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .results {
+            margin-top: 20px;
+        }
+
+        .result-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #7b42f6;
+            margin-bottom: 10px;
+        }
+
+        .diff-highlight {
+            background: rgba(255, 0, 128, 0.2);
+            padding: 2px 5px;
+            border-radius: 3px;
+            color: #ff6b9d;
+        }
+
+        .duplicate-item {
+            background: rgba(255, 215, 0, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 5px 0;
+            border-left: 4px solid #ffd700;
+        }
+
+        .hex-value {
+            font-family: 'Courier New', Courier, monospace;
+            color: #00d4ff;
+        }
+
+        .count {
+            color: #7b42f6;
+            font-weight: bold;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.2);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00d4ff, #7b42f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: #b0b0b0;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .clear-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .clear-btn:hover {
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .hex-inputs {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>HEX16 Comparison Tool</h1>
+            <button class="language-switch" onclick="toggleLanguage()">中文 / English</button>
+        </div>
+
+        <div class="tool-section">
+            <h2 class="section-title" data-en="Comparison" data-zh="对比">Comparison</h2>
+            <div class="hex-inputs">
+                <div class="input-group">
+                    <label data-en="HEX Data 1" data-zh="十六进制数据1">HEX Data 1</label>
+                    <textarea id="hex1" placeholder="Enter HEX data here...
+Example:
+00 11 22 33
+44 55 66 77
+88 99 AA BB"></textarea>
+                </div>
+                <div class="input-group">
+                    <label data-en="HEX Data 2" data-zh="十六进制数据2">HEX Data 2</label>
+                    <textarea id="hex2" placeholder="Enter HEX data here...
+Example:
+00 11 22 33
+44 55 FF 77
+88 99 AA CC"></textarea>
+                </div>
+            </div>
+            <div class="buttons">
+                <button onclick="compareHex()" data-en="Compare" data-zh="对比">Compare</button>
+                <button onclick="checkDuplicates()" data-en="Check Duplicates" data-zh="检查重复">Check Duplicates</button>
+                <button class="clear-btn" onclick="clearAll()" data-en="Clear All" data-zh="清空所有">Clear All</button>
+            </div>
+        </div>
+
+        <div class="tool-section">
+            <h2 class="section-title" data-en="File Checksum Comparison" data-zh="文件校验值对比">File Checksum Comparison</h2>
+            <div class="hex-inputs">
+                <div class="input-group">
+                    <label data-en="File 1" data-zh="文件1">File 1</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="file" id="file1" style="flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 10px; color: #e0e0e0; cursor: pointer;">
+                        <span id="fileName1" style="color: #00d4ff; font-family: 'Courier New', Courier, monospace;"></span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label data-en="File 2" data-zh="文件2">File 2</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="file" id="file2" style="flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 10px; color: #e0e0e0; cursor: pointer;">
+                        <span id="fileName2" style="color: #00d4ff; font-family: 'Courier New', Courier, monospace;"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="buttons">
+                <button onclick="calculateChecksums()" data-en="Calculate Checksums" data-zh="计算校验值">Calculate Checksums</button>
+                <button onclick="compareChecksums()" data-en="Compare Checksums" data-zh="对比校验值">Compare Checksums</button>
+                <button class="clear-btn" onclick="clearFiles()" data-en="Clear Files" data-zh="清空文件">Clear Files</button>
+            </div>
+        </div>
+
+        <div class="tool-section">
+            <h2 class="section-title" data-en="Results" data-zh="结果">Results</h2>
+            <div class="results">
+                <div id="comparisonResult" class="result-item" style="display: none;">
+                    <div class="result-title" data-en="Comparison Result" data-zh="对比结果">Comparison Result</div>
+                    <div id="diffOutput"></div>
+                </div>
+
+                <div id="duplicateResult" class="result-item" style="display: none;">
+                    <div class="result-title" data-en="Duplicate Check Result" data-zh="重复检查结果">Duplicate Check Result</div>
+                    <div id="duplicateOutput"></div>
+                </div>
+
+                <div id="checksumResult" class="result-item" style="display: none;">
+                    <div class="result-title" data-en="Checksum Result" data-zh="校验值结果">Checksum Result</div>
+                    <div id="checksumOutput"></div>
+                </div>
+
+                <div id="stats" class="stats" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentLang = 'en';
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'zh' : 'en';
+            updateLanguage();
+        }
+
+        function updateLanguage() {
+            document.querySelectorAll('[data-en]').forEach(element => {
+                element.textContent = element.getAttribute(`data-${currentLang}`);
+            });
+        }
+
+        function parseHex(hexStr) {
+            return hexStr.trim().split(/\s+/).filter(hex => /^[0-9A-Fa-f]{2}$/.test(hex));
+        }
+
+        function compareHex() {
+            const hex1 = parseHex(document.getElementById('hex1').value);
+            const hex2 = parseHex(document.getElementById('hex2').value);
+            
+            if (hex1.length === 0 && hex2.length === 0) {
+                alert(currentLang === 'en' ? 'Please enter HEX data!' : '请输入十六进制数据！');
+                return;
+            }
+
+            let diffHtml = '<h3 data-en="Differences" data-zh="差异">Differences</h3>';
+            let sameCount = 0;
+            let diffCount = 0;
+            
+            const maxLength = Math.max(hex1.length, hex2.length);
+            
+            for (let i = 0; i < maxLength; i++) {
+                const h1 = hex1[i] || '--';
+                const h2 = hex2[i] || '--';
+                
+                if (h1 === h2) {
+                    sameCount++;
+                } else {
+                    diffCount++;
+                    diffHtml += `<p>Position ${i}: <span class="hex-value">${h1}</span> ↔ <span class="diff-highlight">${h2}</span></p>`;
+                }
+            }
+
+            if (diffCount === 0) {
+                diffHtml += '<p style="color: #00ff88;">✓ No differences found! The HEX data is identical.</p>';
+            }
+
+            document.getElementById('diffOutput').innerHTML = diffHtml;
+            document.getElementById('comparisonResult').style.display = 'block';
+            
+            updateStats(hex1.length, hex2.length, sameCount, diffCount);
+            updateLanguage();
+        }
+
+        function checkDuplicates() {
+            const hex1 = parseHex(document.getElementById('hex1').value);
+            const hex2 = parseHex(document.getElementById('hex2').value);
+            const allHex = [...hex1, ...hex2];
+            
+            if (allHex.length === 0) {
+                alert(currentLang === 'en' ? 'Please enter HEX data!' : '请输入十六进制数据！');
+                return;
+            }
+
+            const hexCount = {};
+            allHex.forEach(hex => {
+                hexCount[hex] = (hexCount[hex] || 0) + 1;
+            });
+
+            const duplicates = Object.entries(hexCount).filter(([hex, count]) => count > 1);
+            
+            let duplicateHtml = '';
+            if (duplicates.length > 0) {
+                duplicateHtml += `<p data-en="Found ${duplicates.length} duplicate HEX values:" data-zh="找到 ${duplicates.length} 个重复的十六进制值：">Found ${duplicates.length} duplicate HEX values:</p>`;
+                duplicates.forEach(([hex, count]) => {
+                    duplicateHtml += `
+                        <div class="duplicate-item">
+                            <span class="hex-value">${hex}</span> - <span class="count">${count}</span> occurrences
+                        </div>
+                    `;
+                });
+            } else {
+                duplicateHtml += '<p style="color: #00ff88;">✓ No duplicate HEX values found!</p>';
+            }
+
+            document.getElementById('duplicateOutput').innerHTML = duplicateHtml;
+            document.getElementById('duplicateResult').style.display = 'block';
+            updateLanguage();
+        }
+
+        function updateStats(len1, len2, same, diff) {
+            const total = len1 + len2;
+            const unique = total - diff;
+            
+            const statsHtml = `
+                <div class="stat-card">
+                    <div class="stat-value">${len1}</div>
+                    <div class="stat-label" data-en="Data 1 Length" data-zh="数据1长度">Data 1 Length</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${len2}</div>
+                    <div class="stat-label" data-en="Data 2 Length" data-zh="数据2长度">Data 2 Length</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${same}</div>
+                    <div class="stat-label" data-en="Matching Bytes" data-zh="匹配字节">Matching Bytes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${diff}</div>
+                    <div class="stat-label" data-en="Different Bytes" data-zh="不同字节">Different Bytes</div>
+                </div>
+            `;
+
+            document.getElementById('stats').innerHTML = statsHtml;
+            document.getElementById('stats').style.display = 'grid';
+            updateLanguage();
+        }
+
+        function clearAll() {
+            document.getElementById('hex1').value = '';
+            document.getElementById('hex2').value = '';
+            document.getElementById('comparisonResult').style.display = 'none';
+            document.getElementById('duplicateResult').style.display = 'none';
+            document.getElementById('stats').style.display = 'none';
+        }
+
+        // File checksum variables
+        let file1Checksums = {};
+        let file2Checksums = {};
+
+        // Event listeners for file selection
+        document.getElementById('file1').addEventListener('change', function(e) {
+            document.getElementById('fileName1').textContent = e.target.files[0]?.name || '';
+        });
+
+        document.getElementById('file2').addEventListener('change', function(e) {
+            document.getElementById('fileName2').textContent = e.target.files[0]?.name || '';
+        });
+
+        // Calculate checksum for a file using specified algorithm
+        async function calculateFileChecksum(file, algorithm) {
+            const buffer = await file.arrayBuffer();
+            const hashBuffer = await crypto.subtle.digest(algorithm, buffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        // Calculate all checksums for a file
+        async function calculateAllChecksums(file) {
+            const algorithms = [
+                { name: 'MD5', algorithm: 'MD5' },
+                { name: 'SHA-1', algorithm: 'SHA-1' },
+                { name: 'SHA-256', algorithm: 'SHA-256' },
+                { name: 'SHA-512', algorithm: 'SHA-512' }
+            ];
+
+            const checksums = {};
+            for (const { name, algorithm } of algorithms) {
+                checksums[name] = await calculateFileChecksum(file, algorithm);
+            }
+            return checksums;
+        }
+
+        // Calculate checksums for both files
+        async function calculateChecksums() {
+            const file1 = document.getElementById('file1').files[0];
+            const file2 = document.getElementById('file2').files[0];
+
+            if (!file1 && !file2) {
+                alert(currentLang === 'en' ? 'Please select at least one file!' : '请至少选择一个文件！');
+                return;
+            }
+
+            let output = '';
+
+            if (file1) {
+                output += `<h3>${file1.name}</h3>`;
+                file1Checksums = await calculateAllChecksums(file1);
+                for (const [algo, checksum] of Object.entries(file1Checksums)) {
+                    output += `<p><strong>${algo}:</strong> <span class="hex-value">${checksum}</span></p>`;
+                }
+            }
+
+            if (file2) {
+                output += `<h3>${file2.name}</h3>`;
+                file2Checksums = await calculateAllChecksums(file2);
+                for (const [algo, checksum] of Object.entries(file2Checksums)) {
+                    output += `<p><strong>${algo}:</strong> <span class="hex-value">${checksum}</span></p>`;
+                }
+            }
+
+            document.getElementById('checksumOutput').innerHTML = output;
+            document.getElementById('checksumResult').style.display = 'block';
+        }
+
+        // Compare checksums between two files
+        function compareChecksums() {
+            const file1 = document.getElementById('file1').files[0];
+            const file2 = document.getElementById('file2').files[0];
+
+            if (!file1 || !file2) {
+                alert(currentLang === 'en' ? 'Please select both files for comparison!' : '请选择两个文件进行对比！');
+                return;
+            }
+
+            if (Object.keys(file1Checksums).length === 0 || Object.keys(file2Checksums).length === 0) {
+                alert(currentLang === 'en' ? 'Please calculate checksums first!' : '请先计算校验值！');
+                return;
+            }
+
+            let output = `<h3 data-en="Checksum Comparison" data-zh="校验值对比">Checksum Comparison</h3>`;
+            let allMatch = true;
+
+            const algorithms = ['MD5', 'SHA-1', 'SHA-256', 'SHA-512'];
+            algorithms.forEach(algo => {
+                const checksum1 = file1Checksums[algo];
+                const checksum2 = file2Checksums[algo];
+                const match = checksum1 === checksum2;
+                
+                if (!match) allMatch = false;
+                
+                output += `
+                    <p>
+                        <strong>${algo}:</strong> 
+                        <span class="hex-value">${checksum1}</span> 
+                        ${match ? '<span style="color: #00ff88;">✓ MATCH</span>' : '<span style="color: #ff6b9d;">✗ MISMATCH</span>'}
+                    </p>
+                `;
+            });
+
+            output += `<h3>${allMatch ? '<span style="color: #00ff88;">✓ All checksums match! Files are identical.</span>' : '<span style="color: #ff6b9d;">✗ Checksums mismatch! Files are different.</span>'}</h3>`;
+
+            document.getElementById('checksumOutput').innerHTML = output;
+            document.getElementById('checksumResult').style.display = 'block';
+            updateLanguage();
+        }
+
+        // Clear file selections and results
+        function clearFiles() {
+            document.getElementById('file1').value = '';
+            document.getElementById('file2').value = '';
+            document.getElementById('fileName1').textContent = '';
+            document.getElementById('fileName2').textContent = '';
+            document.getElementById('checksumResult').style.display = 'none';
+            file1Checksums = {};
+            file2Checksums = {};
+        }
+    </script>
+</body>
+</html>
